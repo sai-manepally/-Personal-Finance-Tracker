@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Optional;
+
 @Controller
 public class HomeController {
 
@@ -26,13 +28,18 @@ public class HomeController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String email, Model model) {
-        return userService.getUserByEmail(email)
-                .map(user -> "redirect:/dashboard?userId=" + user.getId())
-                .orElseGet(() -> {
-                    model.addAttribute("error", "User not found");
-                    return "login";
-                });
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        Model model) {
+        Optional<User> userOpt = userService.authenticateUser(email, password);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return "redirect:/dashboard?userId=" + user.getId();
+        } else {
+            model.addAttribute("error", "Invalid email or password");
+            return "login";
+        }
     }
 
     @GetMapping("/register")
@@ -43,9 +50,17 @@ public class HomeController {
     @PostMapping("/register")
     public String register(@RequestParam String name,
                            @RequestParam String email,
+                           @RequestParam String password,
+                           @RequestParam String confirmPassword,
                            Model model) {
         try {
-            User user = userService.createUser(name, email);
+            // Check if passwords match
+            if (!password.equals(confirmPassword)) {
+                model.addAttribute("error", "Passwords do not match");
+                return "register";
+            }
+
+            User user = userService.createUser(name, email, password);
             return "redirect:/dashboard?userId=" + user.getId();
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());

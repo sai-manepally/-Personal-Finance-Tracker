@@ -23,6 +23,10 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false)
+    private String password;
+
     @Column(nullable = false)
     private double balance = 0.0;
 
@@ -33,9 +37,10 @@ public class User {
     public User() {
     }
 
-    public User(String name, String email) {
+    public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
+        this.password = password;
         this.balance = 0.0;
     }
 
@@ -62,6 +67,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public double getBalance() {
